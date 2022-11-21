@@ -1,6 +1,8 @@
 package events
 
 import (
+	"net"
+
 	"github.com/ahn84/gomqtt/server/internal/packets"
 )
 
@@ -25,6 +27,7 @@ type Client struct {
 	Listener     string
 	Username     []byte
 	CleanSession bool
+	Conn         net.Conn
 }
 
 // Clientlike is an interface for Clients and client-like objects that

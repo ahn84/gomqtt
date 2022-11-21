@@ -216,6 +216,7 @@ func (cl *Client) Info() events.Client {
 		Username:     cl.Username,
 		CleanSession: cl.CleanSession,
 		Listener:     cl.Listener,
+		Conn:         cl.conn,
 	}
 }
 
@@ -508,6 +509,10 @@ func (cl *Client) WritePacket(pk packets.Packet) (n int, err error) {
 	cl.refreshDeadline(cl.keepalive)
 
 	return
+}
+
+func (cl *Client) Conn() net.Conn {
+	return cl.conn
 }
 
 // LWT contains the last will and testament details for a client connection.
