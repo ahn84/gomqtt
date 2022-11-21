@@ -4,7 +4,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mochi-co/mqtt/server/internal/packets"
+	"github.com/ahn84/gomqtt/server/internal/packets"
 )
 
 // Subscriptions is a map of subscriptions keyed on client.

@@ -11,10 +11,10 @@ import (
 	"github.com/logrusorgru/aurora"
 	"go.etcd.io/bbolt"
 
-	mqtt "github.com/mochi-co/mqtt/server"
-	"github.com/mochi-co/mqtt/server/listeners"
-	"github.com/mochi-co/mqtt/server/listeners/auth"
-	"github.com/mochi-co/mqtt/server/persistence/bolt"
+	mqtt "github.com/ahn84/gomqtt/server"
+	"github.com/ahn84/gomqtt/server/listeners"
+	"github.com/ahn84/gomqtt/server/listeners/auth"
+	"github.com/ahn84/gomqtt/server/persistence/bolt"
 )
 
 func main() {

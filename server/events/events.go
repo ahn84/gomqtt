@@ -1,7 +1,7 @@
 package events
 
 import (
-	"github.com/mochi-co/mqtt/server/internal/packets"
+	"github.com/ahn84/gomqtt/server/internal/packets"
 )
 
 // Events provides callback handlers for different event hooks.

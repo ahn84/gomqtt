@@ -1,11 +1,11 @@
 
 <p align="center">
 
-![build status](https://github.com/mochi-co/mqtt/actions/workflows/build.yml/badge.svg) 
-[![Coverage Status](https://coveralls.io/repos/github/mochi-co/mqtt/badge.svg?branch=master)](https://coveralls.io/github/mochi-co/mqtt?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/mochi-co/mqtt)](https://goreportcard.com/report/github.com/mochi-co/mqtt)
-[![Go Reference](https://pkg.go.dev/badge/github.com/mochi-co/mqtt.svg)](https://pkg.go.dev/github.com/mochi-co/mqtt)
-[![contributions paused](https://img.shields.io/badge/contributions-paused-orange.svg?style=flat)](https://github.com/mochi-co/mqtt/issues)
+![build status](https://github.com/ahn84/gomqtt/actions/workflows/build.yml/badge.svg) 
+[![Coverage Status](https://coveralls.io/repos/github/ahn84/gomqtt/badge.svg?branch=master)](https://coveralls.io/github/ahn84/gomqtt?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ahn84/gomqtt)](https://goreportcard.com/report/github.com/ahn84/gomqtt)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ahn84/gomqtt.svg)](https://pkg.go.dev/github.com/ahn84/gomqtt)
+[![contributions paused](https://img.shields.io/badge/contributions-paused-orange.svg?style=flat)](https://github.com/ahn84/gomqtt/issues)
 
 </p>
 
@@ -16,7 +16,7 @@
 Mochi MQTT is an embeddable high-performance MQTT broker server written in Go, and compliant with the MQTT v3.0 and v3.1.1 specification for the development of IoT and smarthome projects. The server can be used either as a standalone binary or embedded as a library in your own projects. Mochi MQTT message throughput is comparable with everyone's favourites such as Mosquitto, Mosca, and VerneMQ. There are several forks and copies of Mochi MQTT - this is the original.
 
 > #### 📦 💬 See Github Discussions for discussions about releases
-> Ongoing discussion about current and future releases can be found at https://github.com/mochi-co/mqtt/discussions
+> Ongoing discussion about current and future releases can be found at https://github.com/ahn84/gomqtt/discussions
 
 ```diff
 @ Pull Requests to v1.x.x are now frozen due to v2.0.0 being close to pre-release!
@@ -65,7 +65,7 @@ docker run -p 1883:1883 -p 1882:1882 -p 8080:8080 mochi:latest
 
 ``` go
 import (
-  mqtt "github.com/mochi-co/mqtt/server"
+  mqtt "github.com/ahn84/gomqtt/server"
 )
 
 func main() {
@@ -136,7 +136,7 @@ Working examples can be found in the `examples/events` folder. Please open an is
 `server.Events.OnConnect` is called when a client successfully connects to the broker. The method receives the connect packet and the id and connection type for the client who connected.
 
 ```go
-import "github.com/mochi-co/mqtt/server/events"
+import "github.com/ahn84/gomqtt/server/events"
 
 server.Events.OnMessage = func(cl events.Client, pk events.Packet) (pkx events.Packet, err error) {
     fmt.Printf("<< OnConnect client connected %s: %+v\n", cl.ID, pk)
@@ -184,7 +184,7 @@ If an error is returned, the packet will not be modified. and the existing packe
 > This hook is only triggered when a message is received by clients. It is not triggered when using the direct `server.Publish` method.
 
 ```go
-import "github.com/mochi-co/mqtt/server/events"
+import "github.com/ahn84/gomqtt/server/events"
 
 server.Events.OnMessage = func(cl events.Client, pk events.Packet) (pkx events.Packet, err error) {
     if string(pk.Payload) == "hello" {
@@ -244,7 +244,7 @@ A working example can be found in the `examples/events` folder.
 #### Data Persistence
 Mochi MQTT provides a `persistence.Store` interface for developing and attaching persistent stores to the broker. The default persistence mechanism packaged with the broker is backed by [Bolt](https://github.com/etcd-io/bbolt) and can be enabled by assigning a `*bolt.Store` to the server.
 ```go
-// import "github.com/mochi-co/mqtt/server/persistence/bolt"
+// import "github.com/ahn84/gomqtt/server/persistence/bolt"
 err = server.AddStore(bolt.New("mochi.db", nil))
 if err != nil {
     log.Fatal(err)
@@ -324,7 +324,7 @@ _With only 1 client, there is no variation in throughput so the benchmark is rep
 
 
 ## Contributions
-Contributions and feedback are both welcomed and encouraged! Open an [issue](https://github.com/mochi-co/mqtt/issues) to report a bug, ask a question, or make a feature request.
+Contributions and feedback are both welcomed and encouraged! Open an [issue](https://github.com/ahn84/gomqtt/issues) to report a bug, ask a question, or make a feature request.
 
 
 

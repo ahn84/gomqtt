@@ -1,4 +1,4 @@
-module github.com/mochi-co/mqtt
+module github.com/ahn84/gomqtt
 
 go 1.18
 
