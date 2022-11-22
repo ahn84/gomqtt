@@ -23,6 +23,7 @@ type Packet packets.Packet
 // ClientLike contains limited information about a connected client.
 type ClientLike interface {
 	GetID() string
+	SetID(string)
 	GetRemote() string
 	GetListener() string
 	GetUsername() []byte

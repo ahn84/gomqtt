@@ -549,6 +549,8 @@ func (s *Server) Publish(topic string, payload []byte, retain bool) error {
 func (*inlineMessages) GetID() string {
 	return "inline"
 }
+func (*inlineMessages) SetID(id string) {
+}
 func (*inlineMessages) GetRemote() string {
 	return "inline"
 }

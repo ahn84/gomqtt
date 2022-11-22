@@ -497,6 +497,9 @@ func (cl *Client) WritePacket(pk packets.Packet) (n int, err error) {
 func (cl *Client) GetID() string {
 	return cl.ID
 }
+func (cl *Client) SetID(id string) {
+	cl.ID = id
+}
 func (cl *Client) GetRemote() string {
 	addr := "unknown"
 	if cl.conn != nil && cl.conn.RemoteAddr() != nil {
