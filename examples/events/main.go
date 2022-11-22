@@ -45,27 +45,27 @@ func main() {
 	}()
 
 	// Add OnConnect Event Hook
-	server.Events.OnConnect = func(cl events.Client, pk events.Packet) {
+	server.Events.OnConnect = func(cl events.ClientLike, pk events.Packet) {
 		fmt.Printf("<< OnConnect client connected %s: %+v\n", cl.ID, pk)
 	}
 
 	// Add OnDisconnect Event Hook
-	server.Events.OnDisconnect = func(cl events.Client, err error) {
+	server.Events.OnDisconnect = func(cl events.ClientLike, err error) {
 		fmt.Printf("<< OnDisconnect client disconnected %s: %v\n", cl.ID, err)
 	}
 
 	// Add OnSubscribe Event Hook
-	server.Events.OnSubscribe = func(filter string, cl events.Client, qos byte) {
+	server.Events.OnSubscribe = func(filter string, cl events.ClientLike, qos byte) {
 		fmt.Printf("<< OnSubscribe client subscribed %s: %s %v\n", cl.ID, filter, qos)
 	}
 
 	// Add OnUnsubscribe Event Hook
-	server.Events.OnUnsubscribe = func(filter string, cl events.Client) {
+	server.Events.OnUnsubscribe = func(filter string, cl events.ClientLike) {
 		fmt.Printf("<< OnUnsubscribe client unsubscribed %s: %s\n", cl.ID, filter)
 	}
 
 	// Add OnMessage Event Hook
-	server.Events.OnMessage = func(cl events.Client, pk events.Packet) (pkx events.Packet, err error) {
+	server.Events.OnMessage = func(cl events.ClientLike, pk events.Packet) (pkx events.Packet, err error) {
 		pkx = pk
 		if string(pk.Payload) == "hello" {
 			pkx.Payload = []byte("hello world")

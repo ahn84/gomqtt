@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ahn84/gomqtt/server/events"
 	"github.com/ahn84/gomqtt/server/internal/circ"
 	"github.com/ahn84/gomqtt/server/internal/packets"
 	"github.com/ahn84/gomqtt/server/listeners/auth"
@@ -168,35 +167,35 @@ func TestNewClient(t *testing.T) {
 	require.Nil(t, cl.StopCause())
 }
 
-func TestClientInfoUnknown(t *testing.T) {
-	cl := genClient()
-	cl.ID = "testid"
-	cl.Listener = "testlistener"
-	cl.conn = nil
+// func TestClientInfoUnknown(t *testing.T) {
+// 	cl := genClient()
+// 	cl.ID = "testid"
+// 	cl.Listener = "testlistener"
+// 	cl.conn = nil
 
-	require.Equal(t, events.Client{
-		ID:       "testid",
-		Remote:   "unknown",
-		Listener: "testlistener",
-	}, cl.Info())
-}
+// 	require.Equal(t, events.Client{
+// 		ID:       "testid",
+// 		Remote:   "unknown",
+// 		Listener: "testlistener",
+// 	}, cl.Info())
+// }
 
-func TestClientInfoKnown(t *testing.T) {
-	c1, c2 := net.Pipe()
-	defer c1.Close()
-	defer c2.Close()
+// func TestClientInfoKnown(t *testing.T) {
+// 	c1, c2 := net.Pipe()
+// 	defer c1.Close()
+// 	defer c2.Close()
 
-	cl := genClient()
-	cl.ID = "ID"
-	cl.Listener = "L"
-	cl.conn = c1
+// 	cl := genClient()
+// 	cl.ID = "ID"
+// 	cl.Listener = "L"
+// 	cl.conn = c1
 
-	require.Equal(t, events.Client{
-		ID:       "ID",
-		Remote:   c1.RemoteAddr().String(),
-		Listener: "L",
-	}, cl.Info())
-}
+// 	require.Equal(t, events.Client{
+// 		ID:       "ID",
+// 		Remote:   c1.RemoteAddr().String(),
+// 		Listener: "L",
+// 	}, cl.Info())
+// }
 
 func BenchmarkNewClient(b *testing.B) {
 	c, _ := net.Pipe()

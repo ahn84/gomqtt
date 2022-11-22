@@ -6,17 +6,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAllowAuth(t *testing.T) {
-	ac := new(Allow)
-	require.Equal(t, true, ac.Authenticate([]byte("user"), []byte("pass")))
-}
+// func TestAllowAuth(t *testing.T) {
+// 	ac := new(Allow)
+// 	require.Equal(t, true, ac.Authenticate([]byte("user"), []byte("pass")))
+// }
 
-func BenchmarkAllowAuth(b *testing.B) {
-	ac := new(Allow)
-	for n := 0; n < b.N; n++ {
-		ac.Authenticate([]byte("user"), []byte("pass"))
-	}
-}
+// func BenchmarkAllowAuth(b *testing.B) {
+// 	ac := new(Allow)
+// 	for n := 0; n < b.N; n++ {
+// 		ac.Authenticate([]byte("user"), []byte("pass"))
+// 	}
+// }
 
 func TestAllowACL(t *testing.T) {
 	ac := new(Allow)
@@ -30,17 +30,17 @@ func BenchmarkAllowACL(b *testing.B) {
 	}
 }
 
-func TestDisallowAuth(t *testing.T) {
-	ac := new(Disallow)
-	require.Equal(t, false, ac.Authenticate([]byte("user"), []byte("pass")))
-}
+// func TestDisallowAuth(t *testing.T) {
+// 	ac := new(Disallow)
+// 	require.Equal(t, false, ac.Authenticate([]byte("user"), []byte("pass")))
+// }
 
-func BenchmarkDisallowAuth(b *testing.B) {
-	ac := new(Disallow)
-	for n := 0; n < b.N; n++ {
-		ac.Authenticate([]byte("user"), []byte("pass"))
-	}
-}
+// func BenchmarkDisallowAuth(b *testing.B) {
+// 	ac := new(Disallow)
+// 	for n := 0; n < b.N; n++ {
+// 		ac.Authenticate([]byte("user"), []byte("pass"))
+// 	}
+// }
 
 func TestDisallowACL(t *testing.T) {
 	ac := new(Disallow)

@@ -27,11 +27,11 @@ import (
 
 type packetHook struct {
 	lock   sync.Mutex
-	client events.Client
+	client events.ClientLike
 	packet events.Packet
 }
 
-func (h *packetHook) onPacket(cl events.Client, pk events.Packet) (events.Packet, error) {
+func (h *packetHook) onPacket(cl events.ClientLike, pk events.Packet) (events.Packet, error) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 	h.client = cl
@@ -39,18 +39,18 @@ func (h *packetHook) onPacket(cl events.Client, pk events.Packet) (events.Packet
 	return pk, nil
 }
 
-func (h *packetHook) onConnect(cl events.Client, pk events.Packet) {
+func (h *packetHook) onConnect(cl events.ClientLike, pk events.Packet) {
 	h.onPacket(cl, pk)
 }
 
 type errorHook struct {
 	lock   sync.Mutex
-	client events.Client
+	client events.ClientLike
 	err    error
 	cnt    int
 }
 
-func (h *errorHook) onError(cl events.Client, err error) {
+func (h *errorHook) onError(cl events.ClientLike, err error) {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 	h.client = cl
@@ -247,7 +247,7 @@ func BenchmarkServerServe(b *testing.B) {
 
 func TestServerInlineInfo(t *testing.T) {
 	s := New()
-	require.Equal(t, events.Client{
+	require.Equal(t, events.ClientLike{
 		ID:       "inline",
 		Remote:   "inline",
 		Listener: "inline",
@@ -367,7 +367,7 @@ func TestServerEventOnConnect(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 
-	require.Equal(t, events.Client{
+	require.Equal(t, events.ClientLike{
 		ID:           "mochi",
 		Remote:       "pipe",
 		Listener:     "tcp",
@@ -443,7 +443,7 @@ func TestServerEventOnDisconnect(t *testing.T) {
 
 	w.Close()
 
-	require.Equal(t, events.Client{
+	require.Equal(t, events.ClientLike{
 		ID:           "mochi",
 		Remote:       "pipe",
 		Listener:     "tcp",
@@ -466,7 +466,7 @@ func TestServerEventOnDisconnectOnError(t *testing.T) {
 	s, cl, _, _ := setupClient()
 	s.Clients.Add(cl)
 
-	s.Events.OnError = func(cl events.Client, err error) {
+	s.Events.OnError = func(cl events.ClientLike, err error) {
 		// Do not allow
 		panic(fmt.Errorf("unreachable error"))
 	}
@@ -507,7 +507,7 @@ func TestServerEventOnDisconnectOnError(t *testing.T) {
 	require.Equal(t, "No valid packet available; 0", errx.Error())
 	require.Equal(t, errx, hook.err)
 
-	require.Equal(t, events.Client{
+	require.Equal(t, events.ClientLike{
 		ID:           "mochi",
 		Remote:       "pipe",
 		Listener:     "tcp",
@@ -1431,7 +1431,7 @@ func TestServerEventOnMessage(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(10 * time.Millisecond)
 
-	require.Equal(t, events.Client{
+	require.Equal(t, events.ClientLike{
 		ID:       "mochi",
 		Remote:   "pipe",
 		Listener: "",
@@ -1456,8 +1456,8 @@ func TestServerProcessPublishHookOnMessageModify(t *testing.T) {
 	s.Clients.Add(cl1)
 	s.Topics.Subscribe("a/b/+", cl1.ID, 0)
 
-	var hookedClient events.Client
-	s.Events.OnMessage = func(cl events.Client, pk events.Packet) (events.Packet, error) {
+	var hookedClient events.ClientLike
+	s.Events.OnMessage = func(cl events.ClientLike, pk events.Packet) (events.Packet, error) {
 		pkx := pk
 		pkx.Payload = []byte("world")
 		hookedClient = cl
@@ -1485,7 +1485,7 @@ func TestServerProcessPublishHookOnMessageModify(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(10 * time.Millisecond)
 
-	require.Equal(t, events.Client{
+	require.Equal(t, events.ClientLike{
 		ID:       "mochi",
 		Remote:   "pipe",
 		Listener: "",
@@ -1508,7 +1508,7 @@ func TestServerProcessPublishHookOnMessageModifyError(t *testing.T) {
 	s.Clients.Add(cl1)
 	s.Topics.Subscribe("a/b/+", cl1.ID, 0)
 
-	s.Events.OnMessage = func(cl events.Client, pk events.Packet) (events.Packet, error) {
+	s.Events.OnMessage = func(cl events.ClientLike, pk events.Packet) (events.Packet, error) {
 		pkx := pk
 		pkx.Payload = []byte("world")
 		return pkx, fmt.Errorf("error")
@@ -1559,7 +1559,7 @@ func TestServerProcessPublishHookOnMessageAllowClients(t *testing.T) {
 	s.Topics.Subscribe("a/b/c", cl2.ID, 0)
 	s.Topics.Subscribe("d/e/f", cl2.ID, 0)
 
-	s.Events.OnMessage = func(cl events.Client, pk events.Packet) (events.Packet, error) {
+	s.Events.OnMessage = func(cl events.ClientLike, pk events.Packet) (events.Packet, error) {
 		if pk.TopicName == "a/b/c" {
 			pk.AllowClients = []string{"allowed"}
 		}
@@ -1632,8 +1632,8 @@ func TestServerEventOnProcessMessage(t *testing.T) {
 	s.Topics.Subscribe("a/b/+", cl1.ID, 0)
 
 	var hookedPacket events.Packet
-	var hookedClient events.Client
-	s.Events.OnProcessMessage = func(cl events.Client, pk events.Packet) (events.Packet, error) {
+	var hookedClient events.ClientLike
+	s.Events.OnProcessMessage = func(cl events.ClientLike, pk events.Packet) (events.Packet, error) {
 		hookedClient = cl
 		hookedPacket = pk
 		return pk, nil
@@ -1660,7 +1660,7 @@ func TestServerEventOnProcessMessage(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(10 * time.Millisecond)
 
-	require.Equal(t, events.Client{
+	require.Equal(t, events.ClientLike{
 		ID:       "mochi",
 		Remote:   "pipe",
 		Listener: "",
@@ -1686,8 +1686,8 @@ func TestServerProcessPublishHookOnProcessMessageModify(t *testing.T) {
 	s.Topics.Subscribe("a/b/+", cl1.ID, 0)
 
 	var hookedPacket events.Packet
-	var hookedClient events.Client
-	s.Events.OnProcessMessage = func(cl events.Client, pk events.Packet) (events.Packet, error) {
+	var hookedClient events.ClientLike
+	s.Events.OnProcessMessage = func(cl events.ClientLike, pk events.Packet) (events.Packet, error) {
 		hookedPacket = pk
 		hookedPacket.FixedHeader.Retain = true
 		hookedPacket.Payload = []byte("world")
@@ -1719,7 +1719,7 @@ func TestServerProcessPublishHookOnProcessMessageModify(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(10 * time.Millisecond)
 
-	require.Equal(t, events.Client{
+	require.Equal(t, events.ClientLike{
 		ID:       "mochi",
 		Remote:   "pipe",
 		Listener: "",
@@ -1745,7 +1745,7 @@ func TestServerProcessPublishHookOnProcessMessageModifyError(t *testing.T) {
 	var hook errorHook
 	s.Events.OnError = hook.onError
 
-	s.Events.OnProcessMessage = func(cl events.Client, pk events.Packet) (events.Packet, error) {
+	s.Events.OnProcessMessage = func(cl events.ClientLike, pk events.Packet) (events.Packet, error) {
 		pkx := pk
 		pkx.Payload = []byte("world")
 
@@ -1951,7 +1951,7 @@ func TestServerProcessSubscribe(t *testing.T) {
 
 	subscribeEvent := ""
 	subscribeClient := ""
-	s.Events.OnSubscribe = func(filter string, cl events.Client, qos byte) {
+	s.Events.OnSubscribe = func(filter string, cl events.ClientLike, qos byte) {
 		if filter == "a/b/c" {
 			subscribeEvent = "a/b/c"
 			subscribeClient = cl.ID
@@ -2131,7 +2131,7 @@ func TestServerProcessUnsubscribe(t *testing.T) {
 
 	unsubscribeEvent := ""
 	unsubscribeClient := ""
-	s.Events.OnUnsubscribe = func(filter string, cl events.Client) {
+	s.Events.OnUnsubscribe = func(filter string, cl events.ClientLike) {
 		if filter == "a/b/c" {
 			unsubscribeEvent = "a/b/c"
 			unsubscribeClient = cl.ID

@@ -20,20 +20,14 @@ type Events struct {
 // Packets is an alias for packets.Packet.
 type Packet packets.Packet
 
-// Client contains limited information about a connected client.
-type Client struct {
-	ID           string
-	Remote       string
-	Listener     string
-	Username     []byte
-	CleanSession bool
-	Conn         net.Conn
-}
-
-// Clientlike is an interface for Clients and client-like objects that
-// are able to describe their client/listener IDs and remote address.
-type Clientlike interface {
-	Info() Client
+// ClientLike contains limited information about a connected client.
+type ClientLike interface {
+	GetID() string
+	GetRemote() string
+	GetListener() string
+	GetUsername() []byte
+	GetCleanSession() bool
+	GetConn() net.Conn
 }
 
 // OnProcessMessage is called when a publish message is received, allowing modification
@@ -49,7 +43,7 @@ type Clientlike interface {
 // have the function open a new goroutine on the embedding side.
 // The `mqtt.ErrRejectPacket` error can be returned to reject and abandon any further
 // processing of the packet.
-type OnProcessMessage func(Client, Packet) (Packet, error)
+type OnProcessMessage func(ClientLike, Packet) (Packet, error)
 
 // OnMessage function is called when a publish message is received. Note,
 // this hook is ONLY called by connected client publishers, it is not triggered when
@@ -60,22 +54,22 @@ type OnProcessMessage func(Client, Packet) (Packet, error)
 // be dispatched as if the event hook had not been triggered.
 // This function will block message dispatching until it returns. To minimise this,
 // have the function open a new goroutine on the embedding side.
-type OnMessage func(Client, Packet) (Packet, error)
+type OnMessage func(ClientLike, Packet) (Packet, error)
 
 // OnConnect is called when a client successfully connects to the broker.
-type OnConnect func(Client, Packet)
+type OnConnect func(ClientLike, Packet)
 
 // OnDisconnect is called when a client disconnects to the broker. An error value
 // is passed to the function if the client disconnected abnormally, otherwise it
 // will be nil on a normal disconnect.
-type OnDisconnect func(Client, error)
+type OnDisconnect func(ClientLike, error)
 
 // OnError is called when errors that will not be passed to
 // OnDisconnect are handled by the server.
-type OnError func(Client, error)
+type OnError func(ClientLike, error)
 
 // OnSubscribe is called when a new subscription filter for a client is created.
-type OnSubscribe func(filter string, cl Client, qos byte)
+type OnSubscribe func(filter string, cl ClientLike, qos byte)
 
 // OnUnsubscribe is called when an existing subscription filter for a client is removed.
-type OnUnsubscribe func(filter string, cl Client)
+type OnUnsubscribe func(filter string, cl ClientLike)

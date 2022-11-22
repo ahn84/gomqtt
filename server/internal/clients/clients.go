@@ -12,7 +12,6 @@ import (
 
 	"github.com/rs/xid"
 
-	"github.com/ahn84/gomqtt/server/events"
 	"github.com/ahn84/gomqtt/server/internal/circ"
 	"github.com/ahn84/gomqtt/server/internal/packets"
 	"github.com/ahn84/gomqtt/server/internal/topics"
@@ -201,22 +200,6 @@ func (cl *Client) refreshDeadline(keepalive uint16) {
 			expiry = time.Now().Add(time.Duration(keepalive+(keepalive/2)) * time.Second)
 		}
 		_ = cl.conn.SetDeadline(expiry)
-	}
-}
-
-// Info returns an event-version of a client, containing minimal information.
-func (cl *Client) Info() events.Client {
-	addr := "unknown"
-	if cl.conn != nil && cl.conn.RemoteAddr() != nil {
-		addr = cl.conn.RemoteAddr().String()
-	}
-	return events.Client{
-		ID:           cl.ID,
-		Remote:       addr,
-		Username:     cl.Username,
-		CleanSession: cl.CleanSession,
-		Listener:     cl.Listener,
-		Conn:         cl.conn,
 	}
 }
 
@@ -512,6 +495,25 @@ func (cl *Client) WritePacket(pk packets.Packet) (n int, err error) {
 }
 
 func (cl *Client) Conn() net.Conn {
+	return cl.conn
+}
+
+func (cl *Client) GetID() string {
+	return cl.ID
+}
+func (cl *Client) GetRemote() string {
+	return cl.GetRemote()
+}
+func (cl *Client) GetListener() string {
+	return cl.Listener
+}
+func (cl *Client) GetUsername() []byte {
+	return cl.Username
+}
+func (cl *Client) GetCleanSession() bool {
+	return cl.CleanSession
+}
+func (cl *Client) GetConn() net.Conn {
 	return cl.conn
 }
 

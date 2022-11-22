@@ -259,7 +259,7 @@ func (s *Server) readConnectionPacket(cl *clients.Client) (pk packets.Packet, er
 
 // onError is a pass-through method which triggers the OnError
 // event hook (if applicable), and returns the provided error.
-func (s *Server) onError(cl events.Client, err error) error {
+func (s *Server) onError(cl events.ClientLike, err error) error {
 	if err == nil {
 		return err
 	}
@@ -278,12 +278,12 @@ func (s *Server) onError(cl events.Client, err error) error {
 
 // onStorage is a pass-through method which delegates errors from
 // the persistent storage adapter to the onError event hook.
-func (s *Server) onStorage(cl events.Clientlike, err error) {
+func (s *Server) onStorage(cl events.ClientLike, err error) {
 	if err == nil {
 		return
 	}
 
-	_ = s.onError(cl.Info(), fmt.Errorf("storage: %w", err))
+	_ = s.onError(cl, fmt.Errorf("storage: %w", err))
 }
 
 // EstablishConnection establishes a new client when a listener
@@ -306,25 +306,25 @@ func (s *Server) EstablishConnection(lid string, c net.Conn, ac auth.Controller)
 
 	pk, err := s.readConnectionPacket(cl)
 	if err != nil {
-		return s.onError(cl.Info(), fmt.Errorf("read connection: %w", err))
+		return s.onError(cl, fmt.Errorf("read connection: %w", err))
 	}
 
 	ackCode, err := pk.ConnectValidate()
 	if err != nil {
 		if err := s.ackConnection(cl, ackCode, false); err != nil {
-			return s.onError(cl.Info(), fmt.Errorf("invalid connection send ack: %w", err))
+			return s.onError(cl, fmt.Errorf("invalid connection send ack: %w", err))
 		}
-		return s.onError(cl.Info(), fmt.Errorf("validate connection packet: %w", err))
+		return s.onError(cl, fmt.Errorf("validate connection packet: %w", err))
 	}
 
 	cl.Identify(lid, pk, ac) // Set client identity values from the connection packet.
 
-	newUsername, allowed := ac.Authenticate(pk.Username, pk.Password)
+	newUsername, allowed := ac.Authenticate(cl, pk.Password)
 	if !allowed {
 		if err := s.ackConnection(cl, packets.CodeConnectBadAuthValues, false); err != nil {
-			return s.onError(cl.Info(), fmt.Errorf("invalid connection send ack: %w", err))
+			return s.onError(cl, fmt.Errorf("invalid connection send ack: %w", err))
 		}
-		return s.onError(cl.Info(), ErrConnectionFailed)
+		return s.onError(cl, ErrConnectionFailed)
 	}
 	if newUsername != nil {
 		cl.Username = *newUsername
@@ -340,13 +340,13 @@ func (s *Server) EstablishConnection(lid string, c net.Conn, ac auth.Controller)
 
 	err = s.ackConnection(cl, ackCode, sessionPresent)
 	if err != nil {
-		return s.onError(cl.Info(), fmt.Errorf("ack connection packet: %w", err))
+		return s.onError(cl, fmt.Errorf("ack connection packet: %w", err))
 	}
 
 	if sessionPresent {
 		err = s.ResendClientInflight(cl, true)
 		if err != nil {
-			s.onError(cl.Info(), fmt.Errorf("resend in flight: %w", err)) // pass-through, no return.
+			s.onError(cl, fmt.Errorf("resend in flight: %w", err)) // pass-through, no return.
 		}
 	}
 
@@ -362,7 +362,7 @@ func (s *Server) EstablishConnection(lid string, c net.Conn, ac auth.Controller)
 	}
 
 	if s.Events.OnConnect != nil {
-		s.Events.OnConnect(cl.Info(), events.Packet(pk))
+		s.Events.OnConnect(cl, events.Packet(pk))
 	}
 
 	if err := cl.Read(s.processPacket); err != nil {
@@ -377,7 +377,7 @@ func (s *Server) EstablishConnection(lid string, c net.Conn, ac auth.Controller)
 	}
 
 	if s.Events.OnDisconnect != nil {
-		s.Events.OnDisconnect(cl.Info(), err)
+		s.Events.OnDisconnect(cl, err)
 	}
 
 	return err
@@ -432,7 +432,7 @@ func (s *Server) unsubscribeClient(cl *clients.Client) {
 		delete(cl.Subscriptions, k)
 		if s.Topics.Unsubscribe(k, cl.ID) {
 			if s.Events.OnUnsubscribe != nil {
-				s.Events.OnUnsubscribe(k, cl.Info())
+				s.Events.OnUnsubscribe(k, cl)
 			}
 			atomic.AddInt64(&s.System.Subscriptions, -1)
 		}
@@ -548,14 +548,25 @@ func (s *Server) Publish(topic string, payload []byte, retain bool) error {
 	return nil
 }
 
-// Info provides pseudo-client information for the inline messages processor.
-// It provides a 'client' to which inline retained messages can be assigned.
-func (*inlineMessages) Info() events.Client {
-	return events.Client{
-		ID:       "inline",
-		Remote:   "inline",
-		Listener: "inline",
-	}
+// implement ClientLike interface
+
+func (*inlineMessages) GetID() string {
+	return "inline"
+}
+func (*inlineMessages) GetRemote() string {
+	return "inline"
+}
+func (*inlineMessages) GetListener() string {
+	return "inline"
+}
+func (*inlineMessages) GetUsername() []byte {
+	return nil
+}
+func (*inlineMessages) GetCleanSession() bool {
+	return false
+}
+func (*inlineMessages) GetConn() net.Conn {
+	return nil
 }
 
 // processPublish processes a Publish packet.
@@ -570,7 +581,7 @@ func (s *Server) processPublish(cl *clients.Client, pk packets.Packet) error {
 
 	// if an OnProcessMessage hook exists, potentially modify the packet.
 	if s.Events.OnProcessMessage != nil {
-		pkx, err := s.Events.OnProcessMessage(cl.Info(), events.Packet(pk))
+		pkx, err := s.Events.OnProcessMessage(cl, events.Packet(pk))
 		if err == nil {
 			pk = packets.Packet(pkx) // Only use the new package changes if there's no errors.
 		} else {
@@ -580,7 +591,7 @@ func (s *Server) processPublish(cl *clients.Client, pk packets.Packet) error {
 			}
 
 			if s.Events.OnError != nil {
-				s.Events.OnError(cl.Info(), err)
+				s.Events.OnError(cl, err)
 			}
 		}
 	}
@@ -603,12 +614,12 @@ func (s *Server) processPublish(cl *clients.Client, pk packets.Packet) error {
 
 		// omit errors in case of broken connection / LWT publish. ack send failures
 		// will be handled by in-flight resending on next reconnect.
-		s.onError(cl.Info(), s.writeClient(cl, ack))
+		s.onError(cl, s.writeClient(cl, ack))
 	}
 
 	// if an OnMessage hook exists, potentially modify the packet.
 	if s.Events.OnMessage != nil {
-		if pkx, err := s.Events.OnMessage(cl.Info(), events.Packet(pk)); err == nil {
+		if pkx, err := s.Events.OnMessage(cl, events.Packet(pk)); err == nil {
 			pk = packets.Packet(pkx)
 		}
 	}
@@ -621,7 +632,7 @@ func (s *Server) processPublish(cl *clients.Client, pk packets.Packet) error {
 
 // retainMessage adds a message to a topic, and if a persistent store is provided,
 // adds the message to the store so it can be reloaded if necessary.
-func (s *Server) retainMessage(cl events.Clientlike, pk packets.Packet) {
+func (s *Server) retainMessage(cl events.ClientLike, pk packets.Packet) {
 	out := pk.PublishCopy()
 	r := s.Topics.RetainMessage(out)
 	atomic.AddInt64(&s.System.Retained, r)
@@ -691,7 +702,7 @@ func (s *Server) publishToSubscribers(pk packets.Packet) {
 				}
 			}
 
-			s.onError(client.Info(), s.writeClient(client, out))
+			s.onError(client, s.writeClient(client, out))
 		}
 	}
 }
@@ -773,7 +784,7 @@ func (s *Server) processSubscribe(cl *clients.Client, pk packets.Packet) error {
 			r := s.Topics.Subscribe(pk.Topics[i], cl.ID, pk.Qoss[i])
 			if r {
 				if s.Events.OnSubscribe != nil {
-					s.Events.OnSubscribe(pk.Topics[i], cl.Info(), pk.Qoss[i])
+					s.Events.OnSubscribe(pk.Topics[i], cl, pk.Qoss[i])
 				}
 				atomic.AddInt64(&s.System.Subscriptions, 1)
 			}
@@ -811,7 +822,7 @@ func (s *Server) processSubscribe(cl *clients.Client, pk packets.Packet) error {
 		}
 
 		for _, pkv := range s.Topics.Messages(pk.Topics[i]) {
-			s.onError(cl.Info(), s.writeClient(cl, pkv))
+			s.onError(cl, s.writeClient(cl, pkv))
 		}
 	}
 
@@ -824,7 +835,7 @@ func (s *Server) processUnsubscribe(cl *clients.Client, pk packets.Packet) error
 		q := s.Topics.Unsubscribe(pk.Topics[i], cl.ID)
 		if q {
 			if s.Events.OnUnsubscribe != nil {
-				s.Events.OnUnsubscribe(pk.Topics[i], cl.Info())
+				s.Events.OnUnsubscribe(pk.Topics[i], cl)
 			}
 			atomic.AddInt64(&s.System.Subscriptions, -1)
 		}
@@ -993,7 +1004,7 @@ func (s *Server) sendLWT(cl *clients.Client) error {
 			Payload:   cl.LWT.Message,
 		})
 		if err != nil {
-			return s.onError(cl.Info(), fmt.Errorf("send lwt: %s %w; %+v", cl.ID, err, cl.LWT))
+			return s.onError(cl, fmt.Errorf("send lwt: %s %w; %+v", cl.ID, err, cl.LWT))
 		}
 	}
 
@@ -1049,7 +1060,7 @@ func (s *Server) loadSubscriptions(v []persistence.Subscription) {
 			if cl, ok := s.Clients.Get(sub.Client); ok {
 				cl.NoteSubscription(sub.Filter, sub.QoS)
 				if s.Events.OnSubscribe != nil {
-					s.Events.OnSubscribe(sub.Filter, cl.Info(), sub.QoS)
+					s.Events.OnSubscribe(sub.Filter, cl, sub.QoS)
 				}
 			}
 		}
