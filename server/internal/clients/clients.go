@@ -494,21 +494,24 @@ func (cl *Client) WritePacket(pk packets.Packet) (n int, err error) {
 	return
 }
 
-func (cl *Client) Conn() net.Conn {
-	return cl.conn
-}
-
 func (cl *Client) GetID() string {
 	return cl.ID
 }
 func (cl *Client) GetRemote() string {
-	return cl.GetRemote()
+	addr := "unknown"
+	if cl.conn != nil && cl.conn.RemoteAddr() != nil {
+		addr = cl.conn.RemoteAddr().String()
+	}
+	return addr
 }
 func (cl *Client) GetListener() string {
 	return cl.Listener
 }
 func (cl *Client) GetUsername() []byte {
 	return cl.Username
+}
+func (cl *Client) SetUsername(name []byte) {
+	cl.Username = name
 }
 func (cl *Client) GetCleanSession() bool {
 	return cl.CleanSession

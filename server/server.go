@@ -562,6 +562,8 @@ func (*inlineMessages) GetListener() string {
 func (*inlineMessages) GetUsername() []byte {
 	return nil
 }
+func (*inlineMessages) SetUsername(name []byte) {
+}
 func (*inlineMessages) GetCleanSession() bool {
 	return false
 }
@@ -575,7 +577,7 @@ func (s *Server) processPublish(cl *clients.Client, pk packets.Packet) error {
 		return nil // Clients can't publish to $SYS topics, so fail silently as per spec.
 	}
 
-	if !cl.AC.ACL(cl.Username, pk.TopicName, true) {
+	if !cl.AC.ACL(cl, pk.TopicName, true) {
 		return nil
 	}
 
@@ -778,7 +780,7 @@ func (s *Server) processPubcomp(cl *clients.Client, pk packets.Packet) error {
 func (s *Server) processSubscribe(cl *clients.Client, pk packets.Packet) error {
 	retCodes := make([]byte, len(pk.Topics))
 	for i := 0; i < len(pk.Topics); i++ {
-		if !cl.AC.ACL(cl.Username, pk.Topics[i], false) {
+		if !cl.AC.ACL(cl, pk.Topics[i], false) {
 			retCodes[i] = packets.ErrSubAckNetworkError
 		} else {
 			r := s.Topics.Subscribe(pk.Topics[i], cl.ID, pk.Qoss[i])

@@ -26,6 +26,7 @@ type ClientLike interface {
 	GetRemote() string
 	GetListener() string
 	GetUsername() []byte
+	SetUsername([]byte)
 	GetCleanSession() bool
 	GetConn() net.Conn
 }
