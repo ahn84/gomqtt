@@ -5,8 +5,8 @@ type Allow struct{}
 
 // Authenticate returns true if a username and password are acceptable. Allow always
 // returns true.
-func (a *Allow) Authenticate(user, password []byte) bool {
-	return true
+func (a *Allow) Authenticate(user, password []byte) (*[]byte, bool) {
+	return nil, true
 }
 
 // ACL returns true if a user has access permissions to read or write on a topic.
@@ -20,8 +20,8 @@ type Disallow struct{}
 
 // Authenticate returns true if a username and password are acceptable. Disallow always
 // returns false.
-func (d *Disallow) Authenticate(user, password []byte) bool {
-	return false
+func (d *Disallow) Authenticate(user, password []byte) (*[]byte, bool) {
+	return nil, false
 }
 
 // ACL returns true if a user has access permissions to read or write on a topic.

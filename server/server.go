@@ -319,11 +319,15 @@ func (s *Server) EstablishConnection(lid string, c net.Conn, ac auth.Controller)
 
 	cl.Identify(lid, pk, ac) // Set client identity values from the connection packet.
 
-	if !ac.Authenticate(pk.Username, pk.Password) {
+	newUsername, allowed := ac.Authenticate(pk.Username, pk.Password)
+	if !allowed {
 		if err := s.ackConnection(cl, packets.CodeConnectBadAuthValues, false); err != nil {
 			return s.onError(cl.Info(), fmt.Errorf("invalid connection send ack: %w", err))
 		}
 		return s.onError(cl.Info(), ErrConnectionFailed)
+	}
+	if newUsername != nil {
+		cl.Username = *newUsername
 	}
 
 	atomic.AddInt64(&s.System.ConnectionsTotal, 1)
