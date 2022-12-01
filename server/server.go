@@ -394,7 +394,7 @@ func (s *Server) ackConnection(cl *clients.Client, ack byte, present bool) error
 // connection ID. If cleanSession is true, the state of any previously existing client
 // session is abandoned.
 func (s *Server) inheritClientSession(pk packets.Packet, cl *clients.Client) bool {
-	if existing, ok := s.Clients.Get(pk.ClientIdentifier); ok {
+	if existing, ok := s.Clients.Get(cl.GetID()); ok {
 		existing.Lock()
 		defer existing.Unlock()
 
